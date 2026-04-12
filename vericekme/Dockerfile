@@ -1,4 +1,3 @@
-# .NET 8 veya 9 kullanıyorsan buradaki 10.0 yazılarını 8.0 veya 9.0 yapabilirsin
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 80
@@ -8,12 +7,12 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
-# Proje dosyasını kopyala (Klasör yapına göre burayı düzenledim)
-COPY ["vericekme.csproj", "."]
-RUN dotnet restore "./vericekme.csproj"
+# Dosyayı bulması için klasör yolunu açıkça belirtiyoruz
+COPY ["vericekme/vericekme.csproj", "vericekme/"]
+RUN dotnet restore "vericekme/vericekme.csproj"
 
-# Geri kalan her şeyi kopyala
 COPY . .
+WORKDIR "/src/vericekme"
 RUN dotnet build "vericekme.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
