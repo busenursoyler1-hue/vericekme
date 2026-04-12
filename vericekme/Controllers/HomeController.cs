@@ -395,6 +395,9 @@ namespace vericekme.Controllers
             options.AddArgument("--disable-gpu");
             options.AddArgument("--no-sandbox");
 
+            options.AddArgument("--disable-dev-shm-usage"); // Sunucu belleği için çok önemli
+            options.BinaryLocation = "/usr/bin/google-chrome"; // Render'daki Chrome'un yeri
+
             // hız optimizasyonu (bozmayacak olanlar)
             options.AddArgument("--disable-extensions");
             options.AddArgument("--disable-dev-shm-usage");
