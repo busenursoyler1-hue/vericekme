@@ -1,0 +1,95 @@
+﻿@model vericekme.Models.UserViewModel
+
+@{
+    ViewData["Title"] = "MY-Veri Çekme";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <div class="text-center mb-4">
+                <h1 class="fw-bold text-primary">MY-Sosyal Medya Analiz Aracı</h1>
+                <p class="text-muted">Programı Yapan: <span class="badge bg-dark">M.Yıldız</span></p>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4 text-center">
+        <form asp-action="Analyze" method="post">
+            <div class="input-group mb-2">
+                <input type="text"
+                       name="profileUrl"
+                       class="form-control form-control-lg"
+                       placeholder="Profil URL'sini buraya yapıştırın..."
+                       required
+                       onclick="pasteClipboard(this)">
+                <button type="submit" class="btn btn-primary px-5">Analiz Et</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    async function pasteClipboard(el) {
+        try {
+            const text = await navigator.clipboard.readText();
+            el.value = text;
+        } catch (err) {
+            console.log("Panodan okuma başarısız:", err);
+        }
+    }
+</script>
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0">Profil Sorgu Sonucu</h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <tbody style="font-size: 1.1rem;">
+                            <tr>
+                                <th class="ps-4 py-3" width="25%">Profil Adı:</th>
+                                <td class="text-primary fw-bold" id="resName">@Model?.Name</td>
+                            </tr>
+                            <tr>
+                                <th class="ps-4 py-3">Profil ID:</th>
+                                <td class="text-primary fw-bold" id="resId">@Model?.Id</td>
+                            </tr>
+                            <tr>
+                                <th class="ps-4 py-3">Profil Uzantısı:</th>
+                                <td class="text-primary fw-bold">@Model?.Website?.TrimEnd('/').Split('/').LastOrDefault()</td>
+                            </tr>
+                            <tr>
+                                <th class="ps-4 py-3">Profil URL:</th>
+                                <td><a href="@Model?.Website" id="resUrl" target="_blank" class="text-primary fw-bold text-decoration-none">@Model?.Website</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-light text-center py-3">
+                    <button class="btn btn-success btn-lg w-100" onclick="copyAllData()">
+                        <i class="bi bi-clipboard"></i> Tüm Bilgileri Kopyala
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function copyAllData() {
+        var name = document.getElementById("resName").innerText;
+        var id = document.getElementById("resId").innerText;
+        var url = document.getElementById("resUrl").innerText;
+
+        if(url == "") {
+            alert("Kopyalanacak veri bulunamadı!");
+            return;
+        }
+
+        var fullText = "Profil Adı: " + name + "\n" +
+                       "Profil ID'si: " + id + "\n" +
+                       "Profil URL'si: " + url;
+
+        navigator.clipboard.writeText(fullText);
+        alert("Tüm bilgiler alt alta kopyalandı!");
+    }
+</script>
