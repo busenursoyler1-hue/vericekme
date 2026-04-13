@@ -17,7 +17,7 @@
 
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body p-4 text-center">
-                    <form asp-action="Analyze" method="post">
+                    <form asp-action="Analyze" method="post" onsubmit="startTimer()">
                         <div class="input-group mb-2">
                             <input type="text"
                                    name="profileUrl"
@@ -104,9 +104,8 @@
             </div>
         </div>
 
-        <!-- SAĞ PANEL: SORGU SÜRESİ -->
+        <!-- SAĞ PANEL -->
         <div class="col-md-3">
-
             <div class="card shadow border-0 text-center">
                 <div class="card-header bg-dark text-white">
                     Sorgu Süresi
@@ -114,24 +113,23 @@
 
                 <div class="card-body">
                     <h3 class="text-primary fw-bold" id="timer">00:00</h3>
-                    <p class="text-muted mb-0">Sayfa açılışından itibaren</p>
+                    <p class="text-muted mb-0">Analiz süresi</p>
                 </div>
             </div>
-
         </div>
 
     </div>
 </div>
 
 <script>
-    // Tekli kopyalama
+    // TEKLİ KOPYA
     function copyText(id) {
         const text = document.getElementById(id).innerText;
         if (!text) return;
         navigator.clipboard.writeText(text);
     }
 
-    // URL kopyala
+    // URL KOPYA
     function copyUrl(event) {
         event.preventDefault();
         const url = document.getElementById("resUrl").innerText;
@@ -139,7 +137,7 @@
         navigator.clipboard.writeText(url);
     }
 
-    // Tüm bilgileri kopyala
+    // TOPLU KOPYA
     function copyAllData() {
         var name = document.getElementById("resName").innerText;
         var id = document.getElementById("resId").innerText;
@@ -159,8 +157,17 @@
         alert("Tüm bilgiler alt alta kopyalandı!");
     }
 
-    // SORGU SÜRESİ (geri sayım değil, geçen süre)
+    // TIMER
     let seconds = 0;
+    let timerInterval = null;
+
+    function startTimer() {
+        seconds = 0;
+
+        if (timerInterval) clearInterval(timerInterval);
+
+        timerInterval = setInterval(updateTimer, 1000);
+    }
 
     function updateTimer() {
         seconds++;
@@ -172,6 +179,4 @@
             String(min).padStart(2, '0') + ":" +
             String(sec).padStart(2, '0');
     }
-
-    setInterval(updateTimer, 1000);
 </script>
