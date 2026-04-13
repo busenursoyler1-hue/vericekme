@@ -6,64 +6,96 @@
 
 <div class="container mt-5">
     <div class="row justify-content-center">
+
+        <!-- SOL ANA İÇERİK -->
         <div class="col-md-9">
+
             <div class="text-center mb-4">
                 <h1 class="fw-bold text-primary">MY-Sosyal Medya Analiz Aracı</h1>
                 <p class="text-muted">Programı Yapan: <span class="badge bg-dark">M.Yıldız</span></p>
             </div>
 
             <div class="card border-0 shadow-sm mb-4">
-    <div class="card-body p-4 text-center">
-        <form asp-action="Analyze" method="post">
-            <div class="input-group mb-2">
-                <input type="text"
-                       name="profileUrl"
-                       class="form-control form-control-lg"
-                       placeholder="Profil URL'sini buraya yapıştırın..."
-                       required
-                       onclick="pasteClipboard(this)">
-                <button type="submit" class="btn btn-primary px-5">Analiz Et</button>
+                <div class="card-body p-4 text-center">
+                    <form asp-action="Analyze" method="post">
+                        <div class="input-group mb-2">
+                            <input type="text"
+                                   name="profileUrl"
+                                   class="form-control form-control-lg"
+                                   placeholder="Profil URL'sini buraya yapıştırın..."
+                                   required
+                                   onclick="pasteClipboard(this)">
+                            <button type="submit" class="btn btn-primary px-5">Analiz Et</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </form>
-    </div>
-</div>
 
-<script>
-    async function pasteClipboard(el) {
-        try {
-            const text = await navigator.clipboard.readText();
-            el.value = text;
-        } catch (err) {
-            console.log("Panodan okuma başarısız:", err);
-        }
-    }
-</script>
+            <script>
+                            async function pasteClipboard(el) {
+                                try {
+                                    const text = await navigator.clipboard.readText();
+                                    el.value = text;
+                                } catch (err) {
+                                    console.log("Panodan okuma başarısız:", err);
+                                }
+                            }
+            </script>
+
             <div class="card shadow border-0">
                 <div class="card-header bg-primary text-white py-3">
                     <h5 class="mb-0">Profil Sorgu Sonucu</h5>
                 </div>
+
                 <div class="card-body p-0">
                     <table class="table table-hover align-middle mb-0">
                         <tbody style="font-size: 1.1rem;">
+
                             <tr>
                                 <th class="ps-4 py-3" width="25%">Profil Adı:</th>
-                                <td class="text-primary fw-bold" id="resName">@Model?.Name</td>
+                                <td class="text-primary fw-bold"
+                                    id="resName"
+                                    onclick="copyText('resName')"
+                                    style="cursor:pointer">
+                                    @Model?.Name
+                                </td>
                             </tr>
+
                             <tr>
                                 <th class="ps-4 py-3">Profil ID:</th>
-                                <td class="text-primary fw-bold" id="resId">@Model?.Id</td>
+                                <td class="text-primary fw-bold"
+                                    id="resId"
+                                    onclick="copyText('resId')"
+                                    style="cursor:pointer">
+                                    @Model?.Id
+                                </td>
                             </tr>
+
                             <tr>
                                 <th class="ps-4 py-3">Profil Uzantısı:</th>
-                                <td class="text-primary fw-bold">@Model?.Website?.TrimEnd('/').Split('/').LastOrDefault()</td>
+                                <td class="text-primary fw-bold">
+                                    @Model?.Website?.TrimEnd('/').Split('/').LastOrDefault()
+                                </td>
                             </tr>
+
                             <tr>
                                 <th class="ps-4 py-3">Profil URL:</th>
-                                <td><a href="@Model?.Website" id="resUrl" target="_blank" class="text-primary fw-bold text-decoration-none">@Model?.Website</a></td>
+                                <td>
+                                    <a href="@Model?.Website"
+                                           id="resUrl"
+                                           target="_blank"
+                                           class="text-primary fw-bold text-decoration-none"
+                                           onclick="copyUrl(event)"
+                                           style="cursor:pointer">
+                                        @Model?.Website
+                                    </a>
+                                </td>
                             </tr>
+
                         </tbody>
                     </table>
                 </div>
+
                 <div class="card-footer bg-light text-center py-3">
                     <button class="btn btn-success btn-lg w-100" onclick="copyAllData()">
                         <i class="bi bi-clipboard"></i> Tüm Bilgileri Kopyala
@@ -71,25 +103,75 @@
                 </div>
             </div>
         </div>
+
+        <!-- SAĞ PANEL: SORGU SÜRESİ -->
+        <div class="col-md-3">
+
+            <div class="card shadow border-0 text-center">
+                <div class="card-header bg-dark text-white">
+                    Sorgu Süresi
+                </div>
+
+                <div class="card-body">
+                    <h3 class="text-primary fw-bold" id="timer">00:00</h3>
+                    <p class="text-muted mb-0">Sayfa açılışından itibaren</p>
+                </div>
+            </div>
+
+        </div>
+
     </div>
 </div>
 
 <script>
+    // Tekli kopyalama
+    function copyText(id) {
+        const text = document.getElementById(id).innerText;
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+    }
+
+    // URL kopyala
+    function copyUrl(event) {
+        event.preventDefault();
+        const url = document.getElementById("resUrl").innerText;
+        if (!url) return;
+        navigator.clipboard.writeText(url);
+    }
+
+    // Tüm bilgileri kopyala
     function copyAllData() {
         var name = document.getElementById("resName").innerText;
         var id = document.getElementById("resId").innerText;
         var url = document.getElementById("resUrl").innerText;
 
-        if(url == "") {
+        if (url == "") {
             alert("Kopyalanacak veri bulunamadı!");
             return;
         }
 
-        var fullText = "Profil Adı: " + name + "\n" +
-                       "Profil ID'si: " + id + "\n" +
-                       "Profil URL'si: " + url;
+        var fullText =
+            "Profil Adı: " + name + "\n" +
+            "Profil ID'si: " + id + "\n" +
+            "Profil URL'si: " + url;
 
         navigator.clipboard.writeText(fullText);
         alert("Tüm bilgiler alt alta kopyalandı!");
     }
+
+    // SORGU SÜRESİ (geri sayım değil, geçen süre)
+    let seconds = 0;
+
+    function updateTimer() {
+        seconds++;
+
+        let min = Math.floor(seconds / 60);
+        let sec = seconds % 60;
+
+        document.getElementById("timer").innerText =
+            String(min).padStart(2, '0') + ":" +
+            String(sec).padStart(2, '0');
+    }
+
+    setInterval(updateTimer, 1000);
 </script>
