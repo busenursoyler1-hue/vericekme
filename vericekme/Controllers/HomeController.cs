@@ -231,151 +231,13 @@
 
 
 
-//// bu kod eksiksiz çalışıyor hepsi doğru (başlangıç)
-//using Microsoft.AspNetCore.Mvc;
-//using vericekme.Models;
-//using OpenQA.Selenium;
-//using OpenQA.Selenium.Chrome;
-//using System;
-//using System.Threading;
-//using System.Text.RegularExpressions;
-//using System.Net;
-
-//namespace vericekme.Controllers
-//{
-//    public partial class HomeController : Controller
-//    {
-//        public IActionResult Index() => View(new UserViewModel());
-
-//        [HttpPost]
-//        public IActionResult Analyze(string profileUrl)
-//        {
-//            var user = new UserViewModel { Website = profileUrl };
-//            var options = new ChromeOptions();
-//            options.AddArgument("--headless=new");
-//            options.AddArgument("--disable-gpu");
-//            options.AddArgument("--no-sandbox");
-
-//            using (IWebDriver driver = new ChromeDriver(options))
-//            {
-//                try
-//                {
-//                    driver.Navigate().GoToUrl(profileUrl);
-//                    // TikTok ve Facebook dinamik içerik için bekleme süresi
-//                    Thread.Sleep(5000);
-
-//                    string source = driver.PageSource;
-//                    string title = driver.Title;
-
-//                    // --- PLATFORM: X (TWITTER) ---
-//                    if (profileUrl.Contains("x.com") || profileUrl.Contains("twitter.com"))
-//                    {
-//                        if (title.Contains("(@"))
-//                            user.Name = title.Split('(')[0].Trim();
-//                        else
-//                            user.Name = title.Replace("on X", "").Replace("/ X", "").Trim();
-
-//                        user.Id = ExtractLong(source, "\"identifier\":\"", "\"");
-//                    }
-
-//                    // --- PLATFORM: FACEBOOK (DÜZELTİLDİ) ---
-//                    else if (profileUrl.Contains("facebook.com"))
-//                    {
-//                        // Sadece "| Facebook" değil, "| Van" veya "| İstanbul" gibi ekleri de temizler
-//                        if (title.Contains("|"))
-//                        {
-//                            user.Name = title.Split('|')[0].Trim();
-//                        }
-//                        else
-//                        {
-//                            user.Name = title.Replace("Facebook", "").Trim();
-//                        }
-
-//                        user.Id = ExtractLong(source, "\"userID\":\"", "\"") ?? ExtractLong(source, "\"entity_id\":\"", "\"");
-//                    }
-
-
-
-
-//                    // --- PLATFORM: INSTAGRAM ---
-//                    else if (profileUrl.Contains("instagram.com"))
-//                    {
-//                        user.Name = title.Split('(')[0].Trim();
-//                        user.Id = ExtractLong(source, "\"profile_id\":\"", "\"");
-//                    }
-
-//                    // --- PLATFORM: TIKTOK (YENİ MANTIK EKLENDİ) ---
-//                    else if (profileUrl.Contains("tiktok.com"))
-//                    {
-//                        // 1. Regex ile ID ve Nickname çekme (Gönderdiğin çalışan mantık)
-//                        var idMatch = Regex.Match(source, @"""id""\s*:\s*""(\d{15,25})""|""user""\s*:\s*\{\s*""id""\s*:\s*""(\d+)""");
-//                        var nickMatch = Regex.Match(source, @"""nickname""\s*:\s*""([^""]+)""");
-
-//                        if (idMatch.Success)
-//                        {
-//                            string rawId = string.IsNullOrEmpty(idMatch.Groups[1].Value) ? idMatch.Groups[2].Value : idMatch.Groups[1].Value;
-//                            if (long.TryParse(rawId, out long tId)) user.Id = tId;
-//                        }
-
-//                        if (nickMatch.Success)
-//                        {
-//                            // Unescape ve Decode işlemiyle Türkçe karakterleri düzeltir
-//                            user.Name = WebUtility.HtmlDecode(Regex.Unescape(nickMatch.Groups[1].Value));
-//                        }
-//                        else
-//                        {
-//                            // Eğer regex bulamazsa klasik yöntem
-//                            user.Name = title.Split('|')[0].Trim();
-//                        }
-
-//                        // Temizlik: "Make Your Day" uyarısı için
-//                        if (string.IsNullOrEmpty(user.Name) || user.Name.Contains("Make Your Day"))
-//                            user.Name = "Bilinmiyor";
-//                    }
-//                }
-//                catch (Exception ex)
-//                {
-//                    user.Name = "Hata oluştu: " + ex.Message;
-//                }
-//            }
-//            return View("Index", user);
-//        }
-
-//        private long? ExtractLong(string source, string startTag, string endTag)
-//        {
-//            try
-//            {
-//                if (source.Contains(startTag))
-//                {
-//                    int start = source.IndexOf(startTag) + startTag.Length;
-//                    int end = source.IndexOf(endTag, start);
-
-//                    if (end > start)
-//                    {
-//                        string value = source.Substring(start, end - start);
-//                        string cleanValue = Regex.Replace(value, "[^0-9]", "");
-//                        if (long.TryParse(cleanValue, out long result))
-//                            return result;
-//                    }
-//                }
-//            }
-//            catch { }
-//            return null;
-//        }
-//    }
-////}
-//// bu kod eksiksiz çalışıyor hepsi doğru (bitiş)
-///
-
-
-
-//buda sorunsuz çalışıyor
+// bu kod eksiksiz çalışıyor hepsi doğru (başlangıç)
 using Microsoft.AspNetCore.Mvc;
 using vericekme.Models;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Support.UI;
 using System;
+using System.Threading;
 using System.Text.RegularExpressions;
 using System.Net;
 
@@ -389,53 +251,26 @@ namespace vericekme.Controllers
         public IActionResult Analyze(string profileUrl)
         {
             var user = new UserViewModel { Website = profileUrl };
-
             var options = new ChromeOptions();
             options.AddArgument("--headless=new");
             options.AddArgument("--disable-gpu");
             options.AddArgument("--no-sandbox");
-
             options.AddArgument("--disable-dev-shm-usage"); // Sunucu belleği için çok önemli
             options.BinaryLocation = "/usr/bin/google-chrome"; // Render'daki Chrome'un yeri
 
-            // hız optimizasyonu (bozmayacak olanlar)
-            options.AddArgument("--disable-extensions");
-            options.AddArgument("--disable-dev-shm-usage");
-            options.AddArgument("--log-level=3");
 
-            var service = ChromeDriverService.CreateDefaultService();
-            service.HideCommandPromptWindow = true;
-
-            using (IWebDriver driver = new ChromeDriver(service, options))
+            using (IWebDriver driver = new ChromeDriver(options))
             {
                 try
                 {
                     driver.Navigate().GoToUrl(profileUrl);
-
-                    WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(6));
-
-                    // 🔥 PLATFORMA GÖRE BEKLEME
-                    if (profileUrl.Contains("x.com") || profileUrl.Contains("twitter.com"))
-                    {
-                        // X için veri gelene kadar bekle
-                        wait.Until(d => d.PageSource.Contains("identifier"));
-                    }
-                    else if (profileUrl.Contains("facebook.com"))
-                    {
-                        // Facebook ID gelene kadar bekle
-                        wait.Until(d => d.PageSource.Contains("userID") || d.PageSource.Contains("entity_id"));
-                    }
-                    else
-                    {
-                        // diğerleri hızlı
-                        wait.Until(d => ((IJavaScriptExecutor)d)
-                            .ExecuteScript("return document.readyState").Equals("complete"));
-                    }
+                    // TikTok ve Facebook dinamik içerik için bekleme süresi
+                    Thread.Sleep(5000);
 
                     string source = driver.PageSource;
                     string title = driver.Title;
 
-                    // --- X (TWITTER) ---
+                    // --- PLATFORM: X (TWITTER) ---
                     if (profileUrl.Contains("x.com") || profileUrl.Contains("twitter.com"))
                     {
                         if (title.Contains("(@"))
@@ -446,51 +281,57 @@ namespace vericekme.Controllers
                         user.Id = ExtractLong(source, "\"identifier\":\"", "\"");
                     }
 
-                    // --- FACEBOOK ---
+                    // --- PLATFORM: FACEBOOK (DÜZELTİLDİ) ---
                     else if (profileUrl.Contains("facebook.com"))
                     {
+                        // Sadece "| Facebook" değil, "| Van" veya "| İstanbul" gibi ekleri de temizler
                         if (title.Contains("|"))
+                        {
                             user.Name = title.Split('|')[0].Trim();
+                        }
                         else
+                        {
                             user.Name = title.Replace("Facebook", "").Trim();
+                        }
 
-                        user.Id = ExtractLong(source, "\"userID\":\"", "\"")
-                               ?? ExtractLong(source, "\"entity_id\":\"", "\"");
+                        user.Id = ExtractLong(source, "\"userID\":\"", "\"") ?? ExtractLong(source, "\"entity_id\":\"", "\"");
                     }
 
-                    // --- INSTAGRAM ---
+
+
+
+                    // --- PLATFORM: INSTAGRAM ---
                     else if (profileUrl.Contains("instagram.com"))
                     {
                         user.Name = title.Split('(')[0].Trim();
                         user.Id = ExtractLong(source, "\"profile_id\":\"", "\"");
                     }
 
-                    // --- TIKTOK ---
+                    // --- PLATFORM: TIKTOK (YENİ MANTIK EKLENDİ) ---
                     else if (profileUrl.Contains("tiktok.com"))
                     {
+                        // 1. Regex ile ID ve Nickname çekme (Gönderdiğin çalışan mantık)
                         var idMatch = Regex.Match(source, @"""id""\s*:\s*""(\d{15,25})""|""user""\s*:\s*\{\s*""id""\s*:\s*""(\d+)""");
                         var nickMatch = Regex.Match(source, @"""nickname""\s*:\s*""([^""]+)""");
 
                         if (idMatch.Success)
                         {
-                            string rawId = string.IsNullOrEmpty(idMatch.Groups[1].Value)
-                                ? idMatch.Groups[2].Value
-                                : idMatch.Groups[1].Value;
-
-                            if (long.TryParse(rawId, out long tId))
-                                user.Id = tId;
+                            string rawId = string.IsNullOrEmpty(idMatch.Groups[1].Value) ? idMatch.Groups[2].Value : idMatch.Groups[1].Value;
+                            if (long.TryParse(rawId, out long tId)) user.Id = tId;
                         }
 
                         if (nickMatch.Success)
                         {
-                            user.Name = WebUtility.HtmlDecode(
-                                Regex.Unescape(nickMatch.Groups[1].Value));
+                            // Unescape ve Decode işlemiyle Türkçe karakterleri düzeltir
+                            user.Name = WebUtility.HtmlDecode(Regex.Unescape(nickMatch.Groups[1].Value));
                         }
                         else
                         {
+                            // Eğer regex bulamazsa klasik yöntem
                             user.Name = title.Split('|')[0].Trim();
                         }
 
+                        // Temizlik: "Make Your Day" uyarısı için
                         if (string.IsNullOrEmpty(user.Name) || user.Name.Contains("Make Your Day"))
                             user.Name = "Bilinmiyor";
                     }
@@ -500,7 +341,6 @@ namespace vericekme.Controllers
                     user.Name = "Hata oluştu: " + ex.Message;
                 }
             }
-
             return View("Index", user);
         }
 
@@ -517,18 +357,181 @@ namespace vericekme.Controllers
                     {
                         string value = source.Substring(start, end - start);
                         string cleanValue = Regex.Replace(value, "[^0-9]", "");
-
                         if (long.TryParse(cleanValue, out long result))
                             return result;
                     }
                 }
             }
             catch { }
-
             return null;
         }
     }
 }
+// bu kod eksiksiz çalışıyor hepsi doğru (bitiş)
+
+
+
+
+////buda sorunsuz çalışıyor
+//using Microsoft.AspNetCore.Mvc;
+//using vericekme.Models;
+//using OpenQA.Selenium;
+//using OpenQA.Selenium.Chrome;
+//using OpenQA.Selenium.Support.UI;
+//using System;
+//using System.Text.RegularExpressions;
+//using System.Net;
+
+//namespace vericekme.Controllers
+//{
+//    public partial class HomeController : Controller
+//    {
+//        public IActionResult Index() => View(new UserViewModel());
+
+//        [HttpPost]
+//        public IActionResult Analyze(string profileUrl)
+//        {
+//            var user = new UserViewModel { Website = profileUrl };
+
+//            var options = new ChromeOptions();
+//            options.AddArgument("--headless=new");
+//            options.AddArgument("--disable-gpu");
+//            options.AddArgument("--no-sandbox");
+
+//            options.AddArgument("--disable-dev-shm-usage"); // Sunucu belleği için çok önemli
+//            options.BinaryLocation = "/usr/bin/google-chrome"; // Render'daki Chrome'un yeri
+
+//            // hız optimizasyonu (bozmayacak olanlar)
+//            options.AddArgument("--disable-extensions");
+//            options.AddArgument("--disable-dev-shm-usage");
+//            options.AddArgument("--log-level=3");
+
+//            var service = ChromeDriverService.CreateDefaultService();
+//            service.HideCommandPromptWindow = true;
+
+//            using (IWebDriver driver = new ChromeDriver(service, options))
+//            {
+//                try
+//                {
+//                    driver.Navigate().GoToUrl(profileUrl);
+
+//                    WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(6));
+
+//                    // 🔥 PLATFORMA GÖRE BEKLEME
+//                    if (profileUrl.Contains("x.com") || profileUrl.Contains("twitter.com"))
+//                    {
+//                        // X için veri gelene kadar bekle
+//                        wait.Until(d => d.PageSource.Contains("identifier"));
+//                    }
+//                    else if (profileUrl.Contains("facebook.com"))
+//                    {
+//                        // Facebook ID gelene kadar bekle
+//                        wait.Until(d => d.PageSource.Contains("userID") || d.PageSource.Contains("entity_id"));
+//                    }
+//                    else
+//                    {
+//                        // diğerleri hızlı
+//                        wait.Until(d => ((IJavaScriptExecutor)d)
+//                            .ExecuteScript("return document.readyState").Equals("complete"));
+//                    }
+
+//                    string source = driver.PageSource;
+//                    string title = driver.Title;
+
+//                    // --- X (TWITTER) ---
+//                    if (profileUrl.Contains("x.com") || profileUrl.Contains("twitter.com"))
+//                    {
+//                        if (title.Contains("(@"))
+//                            user.Name = title.Split('(')[0].Trim();
+//                        else
+//                            user.Name = title.Replace("on X", "").Replace("/ X", "").Trim();
+
+//                        user.Id = ExtractLong(source, "\"identifier\":\"", "\"");
+//                    }
+
+//                    // --- FACEBOOK ---
+//                    else if (profileUrl.Contains("facebook.com"))
+//                    {
+//                        if (title.Contains("|"))
+//                            user.Name = title.Split('|')[0].Trim();
+//                        else
+//                            user.Name = title.Replace("Facebook", "").Trim();
+
+//                        user.Id = ExtractLong(source, "\"userID\":\"", "\"")
+//                               ?? ExtractLong(source, "\"entity_id\":\"", "\"");
+//                    }
+
+//                    // --- INSTAGRAM ---
+//                    else if (profileUrl.Contains("instagram.com"))
+//                    {
+//                        user.Name = title.Split('(')[0].Trim();
+//                        user.Id = ExtractLong(source, "\"profile_id\":\"", "\"");
+//                    }
+
+//                    // --- TIKTOK ---
+//                    else if (profileUrl.Contains("tiktok.com"))
+//                    {
+//                        var idMatch = Regex.Match(source, @"""id""\s*:\s*""(\d{15,25})""|""user""\s*:\s*\{\s*""id""\s*:\s*""(\d+)""");
+//                        var nickMatch = Regex.Match(source, @"""nickname""\s*:\s*""([^""]+)""");
+
+//                        if (idMatch.Success)
+//                        {
+//                            string rawId = string.IsNullOrEmpty(idMatch.Groups[1].Value)
+//                                ? idMatch.Groups[2].Value
+//                                : idMatch.Groups[1].Value;
+
+//                            if (long.TryParse(rawId, out long tId))
+//                                user.Id = tId;
+//                        }
+
+//                        if (nickMatch.Success)
+//                        {
+//                            user.Name = WebUtility.HtmlDecode(
+//                                Regex.Unescape(nickMatch.Groups[1].Value));
+//                        }
+//                        else
+//                        {
+//                            user.Name = title.Split('|')[0].Trim();
+//                        }
+
+//                        if (string.IsNullOrEmpty(user.Name) || user.Name.Contains("Make Your Day"))
+//                            user.Name = "Bilinmiyor";
+//                    }
+//                }
+//                catch (Exception ex)
+//                {
+//                    user.Name = "Hata oluştu: " + ex.Message;
+//                }
+//            }
+
+//            return View("Index", user);
+//        }
+
+//        private long? ExtractLong(string source, string startTag, string endTag)
+//        {
+//            try
+//            {
+//                if (source.Contains(startTag))
+//                {
+//                    int start = source.IndexOf(startTag) + startTag.Length;
+//                    int end = source.IndexOf(endTag, start);
+
+//                    if (end > start)
+//                    {
+//                        string value = source.Substring(start, end - start);
+//                        string cleanValue = Regex.Replace(value, "[^0-9]", "");
+
+//                        if (long.TryParse(cleanValue, out long result))
+//                            return result;
+//                    }
+//                }
+//            }
+//            catch { }
+
+//            return null;
+//        }
+//    }
+//}
 
 
 
