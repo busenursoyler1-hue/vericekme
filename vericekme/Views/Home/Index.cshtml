@@ -4,10 +4,50 @@
     ViewData["Title"] = "MY-Veri Çekme";
 }
 
+<style>
+    /* SORGULAMA TIMER (SAĞ ÜST ORTA) */
+    #timerBox {
+        position: fixed;
+        top: 25%;
+        right: 20px;
+        width: 200px;
+        z-index: 999;
+        display: none;
+    }
+
+    /* KOPYALANDI BİLDİRİM */
+    .copy-toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-weight: bold;
+        z-index: 9999;
+        display: none;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+</style>
+
+<!-- TIMER BOX -->
+<div id="timerBox" class="card shadow border-0 text-center">
+    <div class="card-header bg-dark text-white">
+        Sorgu Süresi
+    </div>
+    <div class="card-body">
+        <h3 class="text-primary fw-bold" id="timer">00:00</h3>
+        <p class="text-muted mb-0">Analiz süresi</p>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="copy-toast">Kopyalandı</div>
+
 <div class="container mt-5">
     <div class="row justify-content-center">
 
-        <!-- SOL ANA İÇERİK -->
         <div class="col-md-9">
 
             <div class="text-center mb-4">
@@ -17,7 +57,7 @@
 
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body p-4 text-center">
-                    <form asp-action="Analyze" method="post" onsubmit="startTimer()">
+                    <form asp-action="Analyze" method="post" onsubmit="startTimer(); showTimerBox();">
                         <div class="input-group mb-2">
                             <input type="text"
                                    name="profileUrl"
@@ -103,69 +143,16 @@
                 </div>
             </div>
         </div>
-
-        <!-- SAĞ PANEL -->
-        <div class="col-md-3">
-            <div class="card shadow border-0 text-center">
-                <div class="card-header bg-dark text-white">
-                    Sorgu Süresi
-                </div>
-
-                <div class="card-body">
-                    <h3 class="text-primary fw-bold" id="timer">00:00</h3>
-                    <p class="text-muted mb-0">Analiz süresi</p>
-                </div>
-            </div>
-        </div>
-
     </div>
 </div>
 
 <script>
-    // TEKLİ KOPYA
-    function copyText(id) {
-        const text = document.getElementById(id).innerText;
-        if (!text) return;
-        navigator.clipboard.writeText(text);
-    }
-
-    // URL KOPYA
-    function copyUrl(event) {
-        event.preventDefault();
-        const url = document.getElementById("resUrl").innerText;
-        if (!url) return;
-        navigator.clipboard.writeText(url);
-    }
-
-    // TOPLU KOPYA
-    function copyAllData() {
-        var name = document.getElementById("resName").innerText;
-        var id = document.getElementById("resId").innerText;
-        var url = document.getElementById("resUrl").innerText;
-
-        if (url == "") {
-            alert("Kopyalanacak veri bulunamadı!");
-            return;
-        }
-
-        var fullText =
-            "Profil Adı: " + name + "\n" +
-            "Profil ID'si: " + id + "\n" +
-            "Profil URL'si: " + url;
-
-        navigator.clipboard.writeText(fullText);
-        alert("Tüm bilgiler alt alta kopyalandı!");
-    }
-
-    // TIMER
     let seconds = 0;
     let timerInterval = null;
 
     function startTimer() {
         seconds = 0;
-
         if (timerInterval) clearInterval(timerInterval);
-
         timerInterval = setInterval(updateTimer, 1000);
     }
 
@@ -178,5 +165,48 @@
         document.getElementById("timer").innerText =
             String(min).padStart(2, '0') + ":" +
             String(sec).padStart(2, '0');
+    }
+
+    function showTimerBox() {
+        document.getElementById("timerBox").style.display = "block";
+    }
+
+    // COPY + GREEN TOAST
+    function showToast() {
+        const toast = document.getElementById("toast");
+        toast.style.display = "block";
+
+        setTimeout(() => {
+            toast.style.display = "none";
+        }, 1200);
+    }
+
+    function copyText(id) {
+        const text = document.getElementById(id).innerText;
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        showToast();
+    }
+
+    function copyUrl(event) {
+        event.preventDefault();
+        const url = document.getElementById("resUrl").innerText;
+        if (!url) return;
+        navigator.clipboard.writeText(url);
+        showToast();
+    }
+
+    function copyAllData() {
+        var name = document.getElementById("resName").innerText;
+        var id = document.getElementById("resId").innerText;
+        var url = document.getElementById("resUrl").innerText;
+
+        var fullText =
+            "Profil Adı: " + name + "\n" +
+            "Profil ID'si: " + id + "\n" +
+            "Profil URL'si: " + url;
+
+        navigator.clipboard.writeText(fullText);
+        showToast();
     }
 </script>
