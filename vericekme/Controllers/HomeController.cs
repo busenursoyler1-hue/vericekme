@@ -370,135 +370,136 @@
 //// bu kod eksiksiz çalışıyor hepsi doğru (bitiş)
 
 
-// 24.04.2026 14.37. yukarıdaki sorunsuz sadece yavaş
-//using Microsoft.AspNetCore.Mvc;
-//using vericekme.Models;
-//using OpenQA.Selenium;
-//using OpenQA.Selenium.Chrome;
-//using System;
-//using System.Threading;
-//using System.Text.RegularExpressions;
-//using System.Net;
-//using System.Runtime.InteropServices; // İşletim sistemi kontrolü için şart
+//24.04.2026 14.37.yukarıdaki sorunsuz sadece yavaş
+using Microsoft.AspNetCore.Mvc;
+using vericekme.Models;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using System;
+using System.Threading;
+using System.Text.RegularExpressions;
+using System.Net;
+using System.Runtime.InteropServices; // İşletim sistemi kontrolü için şart
 
-//namespace vericekme.Controllers
-//{
-//    public partial class HomeController : Controller
-//    {
-//        public IActionResult Index() => View(new UserViewModel());
+namespace vericekme.Controllers
+{
+    public partial class HomeController : Controller
+    {
+        public IActionResult Index() => View(new UserViewModel());
 
-//        [HttpPost]
-//        public IActionResult Analyze(string profileUrl)
-//        {
-//            var user = new UserViewModel { Website = profileUrl };
-//            var options = new ChromeOptions();
+        [HttpPost]
+        public IActionResult Analyze(string profileUrl)
+        {
+            var user = new UserViewModel { Website = profileUrl };
+            var options = new ChromeOptions();
 
-//            // --- RENDER VE WINDOWS UYUMU (HATA BURADAYDI) ---
-//            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-//            {
-//                // Eğer Render (Linux) üzerindeyse bu yolu kullan
-//                options.BinaryLocation = "/usr/bin/google-chrome";
-//                options.AddArgument("--headless=new");
-//            }
-//            else
-//            {
-//                // Eğer senin bilgisayarındaysa (Windows) BinaryLocation belirlemeye gerek yok, 
-//                // Selenium kendi bulur. Sadece gizli modda çalıştır:
-//                options.AddArgument("--headless=new");
-//            }
+            ---RENDER VE WINDOWS UYUMU(HATA BURADAYDI)-- -
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                Eğer Render(Linux) üzerindeyse bu yolu kullan
 
-//            // --- HIZ AYARLARI ---
-//            options.AddArgument("--disable-gpu");
-//            options.AddArgument("--no-sandbox");
-//            options.AddArgument("--disable-dev-shm-usage");
-//            options.AddArgument("--blink-settings=imagesEnabled=false"); // Resimleri yüklemez, çok hızlandırır
+               options.BinaryLocation = "/usr/bin/google-chrome";
+                options.AddArgument("--headless=new");
+            }
+            else
+            {
+                Eğer senin bilgisayarındaysa(Windows) BinaryLocation belirlemeye gerek yok,
+                Selenium kendi bulur. Sadece gizli modda çalıştır:
+                options.AddArgument("--headless=new");
+            }
 
-//            var service = ChromeDriverService.CreateDefaultService();
-//            service.HideCommandPromptWindow = true;
+            ---HIZ AYARLARI-- -
+           options.AddArgument("--disable-gpu");
+            options.AddArgument("--no-sandbox");
+            options.AddArgument("--disable-dev-shm-usage");
+            options.AddArgument("--blink-settings=imagesEnabled=false"); // Resimleri yüklemez, çok hızlandırır
 
-//            IWebDriver driver = null;
-//            try
-//            {
-//                driver = new ChromeDriver(service, options);
-//                driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(20);
-//                driver.Navigate().GoToUrl(profileUrl);
+            var service = ChromeDriverService.CreateDefaultService();
+            service.HideCommandPromptWindow = true;
 
-//                // --- AKILLI BEKLEME (HIZLI ÇIKIŞ) ---
-//                for (int i = 0; i < 10; i++)
-//                {
-//                    if (driver.PageSource.Contains("nickname") || driver.PageSource.Contains("userID") || driver.PageSource.Contains("identifier"))
-//                        break;
-//                    Thread.Sleep(500);
-//                }
+            IWebDriver driver = null;
+            try
+            {
+                driver = new ChromeDriver(service, options);
+                driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(20);
+                driver.Navigate().GoToUrl(profileUrl);
 
-//                string source = driver.PageSource;
-//                string title = driver.Title;
+                ---AKILLI BEKLEME(HIZLI ÇIKIŞ)-- -
+                for (int i = 0; i < 10; i++)
+                {
+                    if (driver.PageSource.Contains("nickname") || driver.PageSource.Contains("userID") || driver.PageSource.Contains("identifier"))
+                        break;
+                    Thread.Sleep(500);
+                }
 
-//                // --- VERİ ÇEKME MANTIKLARI (DEĞİŞMEDİ) ---
-//                if (profileUrl.Contains("x.com") || profileUrl.Contains("twitter.com"))
-//                {
-//                    user.Name = title.Contains("(@") ? title.Split('(')[0].Trim() : title.Replace("on X", "").Replace("/ X", "").Trim();
-//                    user.Id = ExtractLong(source, "\"identifier\":\"", "\"");
-//                }
-//                else if (profileUrl.Contains("facebook.com"))
-//                {
-//                    user.Name = title.Contains("|") ? title.Split('|')[0].Trim() : title.Replace("Facebook", "").Trim();
-//                    user.Id = ExtractLong(source, "\"userID\":\"", "\"") ?? ExtractLong(source, "\"entity_id\":\"", "\"");
-//                }
-//                else if (profileUrl.Contains("instagram.com"))
-//                {
-//                    user.Name = title.Split('(')[0].Trim();
-//                    user.Id = ExtractLong(source, "\"profile_id\":\"", "\"");
-//                }
-//                else if (profileUrl.Contains("tiktok.com"))
-//                {
-//                    var idMatch = Regex.Match(source, @"""id""\s*:\s*""(\d{15,25})""|""user""\s*:\s*\{\s*""id""\s*:\s*""(\d+)""");
-//                    var nickMatch = Regex.Match(source, @"""nickname""\s*:\s*""([^""]+)""");
+                string source = driver.PageSource;
+                string title = driver.Title;
 
-//                    if (idMatch.Success)
-//                    {
-//                        string rawId = string.IsNullOrEmpty(idMatch.Groups[1].Value) ? idMatch.Groups[2].Value : idMatch.Groups[1].Value;
-//                        if (long.TryParse(rawId, out long tId)) user.Id = tId;
-//                    }
-//                    user.Name = nickMatch.Success ? WebUtility.HtmlDecode(Regex.Unescape(nickMatch.Groups[1].Value)) : title.Split('|')[0].Trim();
-//                }
-//            }
-//            catch (Exception ex)
-//            {
-//                user.Name = "Hata oluştu: " + ex.Message;
-//            }
-//            finally
-//            {
-//                if (driver != null)
-//                {
-//                    driver.Quit();
-//                    driver.Dispose();
-//                }
-//            }
-//            return View("Index", user);
-//        }
+                ---VERİ ÇEKME MANTIKLARI(DEĞİŞMEDİ) ---
+                if (profileUrl.Contains("x.com") || profileUrl.Contains("twitter.com"))
+                {
+                    user.Name = title.Contains("(@") ? title.Split('(')[0].Trim() : title.Replace("on X", "").Replace("/ X", "").Trim();
+                    user.Id = ExtractLong(source, "\"identifier\":\"", "\"");
+                }
+                else if (profileUrl.Contains("facebook.com"))
+                {
+                    user.Name = title.Contains("|") ? title.Split('|')[0].Trim() : title.Replace("Facebook", "").Trim();
+                    user.Id = ExtractLong(source, "\"userID\":\"", "\"") ?? ExtractLong(source, "\"entity_id\":\"", "\"");
+                }
+                else if (profileUrl.Contains("instagram.com"))
+                {
+                    user.Name = title.Split('(')[0].Trim();
+                    user.Id = ExtractLong(source, "\"profile_id\":\"", "\"");
+                }
+                else if (profileUrl.Contains("tiktok.com"))
+                {
+                    var idMatch = Regex.Match(source, @"""id""\s*:\s*""(\d{15,25})""|""user""\s*:\s*\{\s*""id""\s*:\s*""(\d+)""");
+                    var nickMatch = Regex.Match(source, @"""nickname""\s*:\s*""([^""]+)""");
 
-//        private long? ExtractLong(string source, string startTag, string endTag)
-//        {
-//            try
-//            {
-//                if (source.Contains(startTag))
-//                {
-//                    int start = source.IndexOf(startTag) + startTag.Length;
-//                    int end = source.IndexOf(endTag, start);
-//                    if (end > start)
-//                    {
-//                        string value = source.Substring(start, end - start);
-//                        string cleanValue = Regex.Replace(value, "[^0-9]", "");
-//                        if (long.TryParse(cleanValue, out long result)) return result;
-//                    }
-//                }
-//            }
-//            catch { }
-//            return null;
-//        }
-//    }
-//}
+                    if (idMatch.Success)
+                    {
+                        string rawId = string.IsNullOrEmpty(idMatch.Groups[1].Value) ? idMatch.Groups[2].Value : idMatch.Groups[1].Value;
+                        if (long.TryParse(rawId, out long tId)) user.Id = tId;
+                    }
+                    user.Name = nickMatch.Success ? WebUtility.HtmlDecode(Regex.Unescape(nickMatch.Groups[1].Value)) : title.Split('|')[0].Trim();
+                }
+            }
+            catch (Exception ex)
+            {
+                user.Name = "Hata oluştu: " + ex.Message;
+            }
+            finally
+            {
+                if (driver != null)
+                {
+                    driver.Quit();
+                    driver.Dispose();
+                }
+            }
+            return View("Index", user);
+        }
+
+        private long? ExtractLong(string source, string startTag, string endTag)
+        {
+            try
+            {
+                if (source.Contains(startTag))
+                {
+                    int start = source.IndexOf(startTag) + startTag.Length;
+                    int end = source.IndexOf(endTag, start);
+                    if (end > start)
+                    {
+                        string value = source.Substring(start, end - start);
+                        string cleanValue = Regex.Replace(value, "[^0-9]", "");
+                        if (long.TryParse(cleanValue, out long result)) return result;
+                    }
+                }
+            }
+            catch { }
+            return null;
+        }
+    }
+}
 
 
 
@@ -639,143 +640,7 @@
 //    }
 //}
 
-using Microsoft.AspNetCore.Mvc;
-using vericekme.Models;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using System;
-using System.Threading;
-using System.Text.RegularExpressions;
-using System.Net;
-using System.Runtime.InteropServices;
 
-namespace vericekme.Controllers
-{
-    public partial class HomeController : Controller
-    {
-        public IActionResult Index() => View(new UserViewModel());
-
-        [HttpPost]
-        public IActionResult Analyze(string profileUrl)
-        {
-            var user = new UserViewModel { Website = profileUrl };
-            var options = new ChromeOptions();
-
-            // --- 11 SANİYELİK KODUN AYARLARI ---
-            options.PageLoadStrategy = PageLoadStrategy.Eager;
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                options.BinaryLocation = "/usr/bin/google-chrome";
-                options.AddArgument("--headless=new");
-            }
-            else
-            {
-                options.AddArgument("--headless=new");
-            }
-
-            // HIZ AYARLARI (AYNEN KORUNDU)
-            options.AddArgument("--disable-gpu");
-            options.AddArgument("--no-sandbox");
-            options.AddArgument("--disable-dev-shm-usage");
-            options.AddArgument("--blink-settings=imagesEnabled=false");
-            options.AddArgument("--disable-notifications");
-            options.AddArgument("--disable-remote-fonts");
-            options.AddArgument("--disable-extensions");
-
-            // --- X.COM İÇİN TEK KRİTİK EKLEME (HIZI BOZMAZ) ---
-            // Render'da X.com'un boş sayfa vermemesi için sadece bu kimlik yeterli.
-            options.AddArgument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
-
-            var service = ChromeDriverService.CreateDefaultService();
-            service.HideCommandPromptWindow = true;
-
-            IWebDriver driver = null;
-            try
-            {
-                driver = new ChromeDriver(service, options);
-                driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(15);
-                driver.Navigate().GoToUrl(profileUrl);
-
-                // --- 11 SANİYELİK KODUN DÖNGÜSÜ ---
-                for (int i = 0; i < 25; i++)
-                {
-                    string currentSource = driver.PageSource;
-                    if (currentSource.Contains("nickname") || currentSource.Contains("userID") ||
-                        currentSource.Contains("identifier") || currentSource.Contains("profile_id"))
-                        break;
-                    Thread.Sleep(200);
-                }
-
-                string source = driver.PageSource;
-                string title = driver.Title;
-
-                // --- VERİ ÇEKME MANTIKLARI (NOKTASINA DOKUNULMADI) ---
-                if (profileUrl.Contains("x.com") || profileUrl.Contains("twitter.com"))
-                {
-                    user.Name = title.Contains("(@") ? title.Split('(')[0].Trim() : title.Replace("on X", "").Replace("/ X", "").Trim();
-                    // X bazen rest_id kullanır, onu da bozmadan ekledik
-                    user.Id = ExtractLong(source, "\"identifier\":\"", "\"") ?? ExtractLong(source, "\"rest_id\":\"", "\"");
-                }
-                else if (profileUrl.Contains("facebook.com"))
-                {
-                    user.Name = title.Contains("|") ? title.Split('|')[0].Trim() : title.Replace("Facebook", "").Trim();
-                    user.Id = ExtractLong(source, "\"userID\":\"", "\"") ?? ExtractLong(source, "\"entity_id\":\"", "\"");
-                }
-                else if (profileUrl.Contains("instagram.com"))
-                {
-                    user.Name = title.Split('(')[0].Trim();
-                    user.Id = ExtractLong(source, "\"profile_id\":\"", "\"");
-                }
-                else if (profileUrl.Contains("tiktok.com"))
-                {
-                    var idMatch = Regex.Match(source, @"""id""\s*:\s*""(\d{15,25})""|""user""\s*:\s*\{\s*""id""\s*:\s*""(\d+)""");
-                    var nickMatch = Regex.Match(source, @"""nickname""\s*:\s*""([^""]+)""");
-
-                    if (idMatch.Success)
-                    {
-                        string rawId = string.IsNullOrEmpty(idMatch.Groups[1].Value) ? idMatch.Groups[2].Value : idMatch.Groups[1].Value;
-                        if (long.TryParse(rawId, out long tId)) user.Id = tId;
-                    }
-                    user.Name = nickMatch.Success ? WebUtility.HtmlDecode(Regex.Unescape(nickMatch.Groups[1].Value)) : title.Split('|')[0].Trim();
-                }
-            }
-            catch (Exception ex)
-            {
-                user.Name = "Hata oluştu: " + ex.Message;
-            }
-            finally
-            {
-                if (driver != null)
-                {
-                    driver.Quit();
-                    driver.Dispose();
-                }
-            }
-            return View("Index", user);
-        }
-
-        private long? ExtractLong(string source, string startTag, string endTag)
-        {
-            try
-            {
-                if (source.Contains(startTag))
-                {
-                    int start = source.IndexOf(startTag) + startTag.Length;
-                    int end = source.IndexOf(endTag, start);
-                    if (end > start)
-                    {
-                        string value = source.Substring(start, end - start);
-                        string cleanValue = Regex.Replace(value, "[^0-9]", "");
-                        if (long.TryParse(cleanValue, out long result)) return result;
-                    }
-                }
-            }
-            catch { }
-            return null;
-        }
-    }
-}
 
 
 
