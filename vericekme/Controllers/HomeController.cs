@@ -502,7 +502,143 @@
 
 
 
-//buda oluyor 11 saniye de veriyi getiriyor 24.04.2026 14.41
+////buda oluyor 11 saniye de veriyi getiriyor 24.04.2026 14.41
+//using Microsoft.AspNetCore.Mvc;
+//using vericekme.Models;
+//using OpenQA.Selenium;
+//using OpenQA.Selenium.Chrome;
+//using System;
+//using System.Threading;
+//using System.Text.RegularExpressions;
+//using System.Net;
+//using System.Runtime.InteropServices;
+
+//namespace vericekme.Controllers
+//{
+//    public partial class HomeController : Controller
+//    {
+//        public IActionResult Index() => View(new UserViewModel());
+
+//        [HttpPost]
+//        public IActionResult Analyze(string profileUrl)
+//        {
+//            var user = new UserViewModel { Website = profileUrl };
+//            var options = new ChromeOptions();
+
+//            // --- HIZ AYARI 1: SAYFA YÜKLEME STRATEJİSİ ---
+//            // "Normal" yerine "Eager" yaparak sayfanın tam bitmesini beklemiyoruz.
+//            options.PageLoadStrategy = PageLoadStrategy.Eager;
+
+//            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+//            {
+//                options.BinaryLocation = "/usr/bin/google-chrome";
+//                options.AddArgument("--headless=new");
+//            }
+//            else
+//            {
+//                options.AddArgument("--headless=new");
+//            }
+
+//            // --- HIZ AYARI 2: AGRESİF KAYNAK ENGELLEME ---
+//            options.AddArgument("--disable-gpu");
+//            options.AddArgument("--no-sandbox");
+//            options.AddArgument("--disable-dev-shm-usage");
+//            options.AddArgument("--blink-settings=imagesEnabled=false");
+//            options.AddArgument("--disable-notifications"); // Bildirimleri kapatır
+//            options.AddArgument("--disable-remote-fonts"); // Fontları yüklemez (Hız kazandırır)
+//            options.AddArgument("--disable-extensions"); // Eklentileri devre dışı bırakır
+
+//            var service = ChromeDriverService.CreateDefaultService();
+//            service.HideCommandPromptWindow = true;
+
+//            IWebDriver driver = null;
+//            try
+//            {
+//                driver = new ChromeDriver(service, options);
+//                // Sayfa yükleme zaman aşımını kısalttık
+//                driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(15);
+//                driver.Navigate().GoToUrl(profileUrl);
+
+//                // --- HIZ AYARI 3: DAHA HIZLI DÖNGÜ (200ms) ---
+//                // Eskiden 500ms bekliyordu, şimdi çok daha sık kontrol ediyor.
+//                for (int i = 0; i < 25; i++) // 25 * 200ms = Max 5 saniye kontrol
+//                {
+//                    string currentSource = driver.PageSource;
+//                    if (currentSource.Contains("nickname") || currentSource.Contains("userID") ||
+//                        currentSource.Contains("identifier") || currentSource.Contains("profile_id"))
+//                        break;
+//                    Thread.Sleep(200);
+//                }
+
+//                string source = driver.PageSource;
+//                string title = driver.Title;
+
+//                // --- VERİ ÇEKME MANTIKLARI (AYNEN KORUNDU) ---
+//                if (profileUrl.Contains("x.com") || profileUrl.Contains("twitter.com"))
+//                {
+//                    user.Name = title.Contains("(@") ? title.Split('(')[0].Trim() : title.Replace("on X", "").Replace("/ X", "").Trim();
+//                    user.Id = ExtractLong(source, "\"identifier\":\"", "\"");
+//                }
+//                else if (profileUrl.Contains("facebook.com"))
+//                {
+//                    user.Name = title.Contains("|") ? title.Split('|')[0].Trim() : title.Replace("Facebook", "").Trim();
+//                    user.Id = ExtractLong(source, "\"userID\":\"", "\"") ?? ExtractLong(source, "\"entity_id\":\"", "\"");
+//                }
+//                else if (profileUrl.Contains("instagram.com"))
+//                {
+//                    user.Name = title.Split('(')[0].Trim();
+//                    user.Id = ExtractLong(source, "\"profile_id\":\"", "\"");
+//                }
+//                else if (profileUrl.Contains("tiktok.com"))
+//                {
+//                    var idMatch = Regex.Match(source, @"""id""\s*:\s*""(\d{15,25})""|""user""\s*:\s*\{\s*""id""\s*:\s*""(\d+)""");
+//                    var nickMatch = Regex.Match(source, @"""nickname""\s*:\s*""([^""]+)""");
+
+//                    if (idMatch.Success)
+//                    {
+//                        string rawId = string.IsNullOrEmpty(idMatch.Groups[1].Value) ? idMatch.Groups[2].Value : idMatch.Groups[1].Value;
+//                        if (long.TryParse(rawId, out long tId)) user.Id = tId;
+//                    }
+//                    user.Name = nickMatch.Success ? WebUtility.HtmlDecode(Regex.Unescape(nickMatch.Groups[1].Value)) : title.Split('|')[0].Trim();
+//                }
+//            }
+//            catch (Exception ex)
+//            {
+//                user.Name = "Hata oluştu: " + ex.Message;
+//            }
+//            finally
+//            {
+//                if (driver != null)
+//                {
+//                    driver.Quit();
+//                    driver.Dispose();
+//                }
+//            }
+//            return View("Index", user);
+//        }
+
+//        private long? ExtractLong(string source, string startTag, string endTag)
+//        {
+//            try
+//            {
+//                if (source.Contains(startTag))
+//                {
+//                    int start = source.IndexOf(startTag) + startTag.Length;
+//                    int end = source.IndexOf(endTag, start);
+//                    if (end > start)
+//                    {
+//                        string value = source.Substring(start, end - start);
+//                        string cleanValue = Regex.Replace(value, "[^0-9]", "");
+//                        if (long.TryParse(cleanValue, out long result)) return result;
+//                    }
+//                }
+//            }
+//            catch { }
+//            return null;
+//        }
+//    }
+//}
+
 using Microsoft.AspNetCore.Mvc;
 using vericekme.Models;
 using OpenQA.Selenium;
@@ -525,8 +661,7 @@ namespace vericekme.Controllers
             var user = new UserViewModel { Website = profileUrl };
             var options = new ChromeOptions();
 
-            // --- HIZ AYARI 1: SAYFA YÜKLEME STRATEJİSİ ---
-            // "Normal" yerine "Eager" yaparak sayfanın tam bitmesini beklemiyoruz.
+            // --- 11 SANİYELİK KODUN AYARLARI ---
             options.PageLoadStrategy = PageLoadStrategy.Eager;
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -539,14 +674,18 @@ namespace vericekme.Controllers
                 options.AddArgument("--headless=new");
             }
 
-            // --- HIZ AYARI 2: AGRESİF KAYNAK ENGELLEME ---
+            // HIZ AYARLARI (AYNEN KORUNDU)
             options.AddArgument("--disable-gpu");
             options.AddArgument("--no-sandbox");
             options.AddArgument("--disable-dev-shm-usage");
             options.AddArgument("--blink-settings=imagesEnabled=false");
-            options.AddArgument("--disable-notifications"); // Bildirimleri kapatır
-            options.AddArgument("--disable-remote-fonts"); // Fontları yüklemez (Hız kazandırır)
-            options.AddArgument("--disable-extensions"); // Eklentileri devre dışı bırakır
+            options.AddArgument("--disable-notifications");
+            options.AddArgument("--disable-remote-fonts");
+            options.AddArgument("--disable-extensions");
+
+            // --- X.COM İÇİN TEK KRİTİK EKLEME (HIZI BOZMAZ) ---
+            // Render'da X.com'un boş sayfa vermemesi için sadece bu kimlik yeterli.
+            options.AddArgument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
 
             var service = ChromeDriverService.CreateDefaultService();
             service.HideCommandPromptWindow = true;
@@ -555,13 +694,11 @@ namespace vericekme.Controllers
             try
             {
                 driver = new ChromeDriver(service, options);
-                // Sayfa yükleme zaman aşımını kısalttık
                 driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(15);
                 driver.Navigate().GoToUrl(profileUrl);
 
-                // --- HIZ AYARI 3: DAHA HIZLI DÖNGÜ (200ms) ---
-                // Eskiden 500ms bekliyordu, şimdi çok daha sık kontrol ediyor.
-                for (int i = 0; i < 25; i++) // 25 * 200ms = Max 5 saniye kontrol
+                // --- 11 SANİYELİK KODUN DÖNGÜSÜ ---
+                for (int i = 0; i < 25; i++)
                 {
                     string currentSource = driver.PageSource;
                     if (currentSource.Contains("nickname") || currentSource.Contains("userID") ||
@@ -573,11 +710,12 @@ namespace vericekme.Controllers
                 string source = driver.PageSource;
                 string title = driver.Title;
 
-                // --- VERİ ÇEKME MANTIKLARI (AYNEN KORUNDU) ---
+                // --- VERİ ÇEKME MANTIKLARI (NOKTASINA DOKUNULMADI) ---
                 if (profileUrl.Contains("x.com") || profileUrl.Contains("twitter.com"))
                 {
                     user.Name = title.Contains("(@") ? title.Split('(')[0].Trim() : title.Replace("on X", "").Replace("/ X", "").Trim();
-                    user.Id = ExtractLong(source, "\"identifier\":\"", "\"");
+                    // X bazen rest_id kullanır, onu da bozmadan ekledik
+                    user.Id = ExtractLong(source, "\"identifier\":\"", "\"") ?? ExtractLong(source, "\"rest_id\":\"", "\"");
                 }
                 else if (profileUrl.Contains("facebook.com"))
                 {
@@ -638,8 +776,6 @@ namespace vericekme.Controllers
         }
     }
 }
-
-
 
 
 
